@@ -1,0 +1,6 @@
+{
+  "cmd": "C:/Program Files (x86)/CodeBlocks/MinGW/bin/mingw32-make.exe",
+  "name": "Build",
+  "cwd": "{PROJECT_PATH}",
+  "sh": false
+}

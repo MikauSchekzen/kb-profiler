@@ -1,0 +1,43 @@
+{
+  "bindings": [
+    [
+      {"alt":"0","ctrl":"0","key":"w","label":"","origin":"e","rapidfire":"0","shift":"1"},
+      {"alt":"0","ctrl":"0","key":"s","label":"","origin":"d","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"a","label":"","origin":"s","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"d","label":"","origin":"f","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"space","label":"Jump","origin":"space","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"lshift","label":"","origin":"lshift","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"lctrl","label":"","origin":"lctrl","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"lalt","label":"","origin":"lalt","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"e","label":"Interact","origin":"r","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"q","label":"Kick","origin":"w","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"j","label":"Jetpack","origin":"x","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"m","label":"Medkit","origin":"c","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"r","label":"Steroids","origin":"v","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"f","label":"Nightvision","origin":"g","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"h","label":"Holoduke","origin":"h","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"keymap2","label":"Alt Weapons","origin":"tab","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"1","label":"","origin":"1","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"2","label":"","origin":"2","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"3","label":"","origin":"3","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"4","label":"","origin":"4","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"5","label":"","origin":"5","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"6","label":"","origin":"6","rapidfire":"0","shift":"0"}
+    ],
+    [
+      {"alt":"0","ctrl":"0","key":"7","label":"","origin":"1","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"8","label":"","origin":"2","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"9","label":"","origin":"3","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"0","label":"","origin":"4","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"vkbd","label":"","origin":"5","rapidfire":"0","shift":"0"},
+      {"alt":"0","ctrl":"0","key":"vkbb","label":"","origin":"6","rapidfire":"0","shift":"0"}
+    ]
+  ],
+  "global": {
+    "rehook":0
+  },
+  "keymaps": [
+    {"label":"Default"},
+    {"label":"Alt Weapons"}
+  ]
+}
