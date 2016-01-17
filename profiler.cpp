@@ -130,6 +130,8 @@ class Binding {
   bool alt;
   bool shift;
   bool ctrl;
+  bool codeE0;
+  bool originE0;
   short code;
   short origin;
   int rapidfire;
@@ -145,6 +147,8 @@ class Binding {
     origin = 0x00;
     keymap = 0;
     index = 0;
+    codeE0 = false;
+    originE0 = false;
   }
 
   void parseBind(const Value& bind) {
@@ -157,13 +161,19 @@ class Binding {
 
     ostringstream convert;
 
-    if(bind["key"].IsString()) code = parseKey(bind["key"].GetString());
+    if(bind["key"].IsString()) {
+      code = parseKey(bind["key"].GetString());
+      codeE0 = isE0(bind["key"].GetString());
+    }
     if(bind["key"].IsNumber()) {
       convert << bind["key"].GetInt();
       code = parseKey(convert.str());
     }
     if(code == 0x00) keymap = parseKeymap(bind["key"].GetString());
-    if(bind["origin"].IsString()) origin = parseKey(bind["origin"].GetString());
+    if(bind["origin"].IsString()) {
+      origin = parseKey(bind["origin"].GetString());
+      originE0 = isE0(bind["origin"].GetString());
+    }
     if(bind["origin"].IsNumber()) {
       convert << bind["origin"].GetInt();
       code = parseKey(convert.str());
@@ -285,6 +295,28 @@ class Binding {
     if(key == "m") return SCANCODE_M;
     return 0x00;
   }
+
+  bool isE0(string key) {
+    int testNum = 13;
+    string test[testNum];
+    test[0] = "numpadenter";
+    test[1] = "numpadsub";
+    test[2] = "home";
+    test[3] = "pgup";
+    test[4] = "pgdn";
+    test[5] = "end";
+    test[6] = "insert";
+    test[7] = "delete";
+    test[8] = "left";
+    test[9] = "right";
+    test[10] = "up";
+    test[11] = "down";
+    test[12] = "vkbf";
+    for(int a = 0;a < testNum;a++) {
+      if(key == test[a]) return true;
+    }
+    return false;
+  }
 };
 
 class Keymap {
@@ -371,18 +403,6 @@ int main(int argc, char *argv[])
       }
     }
 
-    // const Value& bindings = d["bindings"];
-    // for(int a = 0;a < maxKeyTypes;a++) {
-    //   for(SizeType b = 0;b < bindings.Size();b++) {
-    //     const Value& keymap = bindings[a];
-    //     Binding keyBind;
-    //     keymaps[]
-    //     for(SizeType c = 0;c < keymap.Size();c++) {
-    //
-    //     }
-    //   }
-    // }
-
     const Value& bindings = d["bindings"];
     int kmCount = 0;
     for(SizeType a = 0;a < bindings.Size();a++) {
@@ -456,9 +476,10 @@ int main(int argc, char *argv[])
               }
             }
 
+            bool keyDown = true;
+            if(keystroke.state == INTERCEPTION_KEY_UP + INTERCEPTION_KEY_E0 || keystroke.state == INTERCEPTION_KEY_UP) keyDown = false;
+
             if(!profileDisabled && doAction) {
-              if(keystroke.state == INTERCEPTION_KEY_E0) keystroke.state = INTERCEPTION_KEY_DOWN;
-              if(keystroke.state == INTERCEPTION_KEY_UP + INTERCEPTION_KEY_E0) keystroke.state = INTERCEPTION_KEY_UP;
 
               bool actionTaken = false;
               for(int a = 0;a < maxKeyTypes && !actionTaken;a++) {
@@ -466,8 +487,9 @@ int main(int argc, char *argv[])
                 Binding bind = keymaps[m].bindings[a];
 
                 if(keystroke.code == bind.origin && bind.code != 0x00) {
-                  if(keystroke.state == INTERCEPTION_KEY_DOWN) {
+                  if(keyDown) {
                     keyHeld[a] = true;
+                    if(bind.originE0) keystroke.state -= INTERCEPTION_KEY_E0;
                     if(bind.shift) {
                       keystroke.code = SCANCODE_LSHIFT;
                       interception_send(context, device, (InterceptionStroke *)&keystroke, 1);
@@ -480,13 +502,18 @@ int main(int argc, char *argv[])
                       keystroke.code = SCANCODE_LALT;
                       interception_send(context, device, (InterceptionStroke *)&keystroke, 1);
                     }
+                    if(bind.originE0) keystroke.state += INTERCEPTION_KEY_E0;
                   }
+
                   keystroke.code = bind.code;
+                  if(bind.originE0 && !bind.codeE0) keystroke.state -= INTERCEPTION_KEY_E0;
+                  else if(!bind.originE0 && bind.codeE0) keystroke.state += INTERCEPTION_KEY_E0;
                   interception_send(context, device, (InterceptionStroke *)&keystroke, 1);
                   actionTaken = true;
 
-                  if(keystroke.state == INTERCEPTION_KEY_UP) {
+                  if(!keyDown) {
                     keyHeld[a] = false;
+                    if(bind.originE0) keystroke.state -= INTERCEPTION_KEY_E0;
                     Binding testBind = keymaps[curMap].bindings[a];
                     if(testBind.code != 0x00 || curMap == 0) {
                       keyInMap[a] = curMap;
@@ -503,17 +530,18 @@ int main(int argc, char *argv[])
                       keystroke.code = SCANCODE_LALT;
                       interception_send(context, device, (InterceptionStroke *)&keystroke, 1);
                     }
+                    if(bind.originE0) keystroke.state += INTERCEPTION_KEY_E0;
                   }
 
                 } else if(keystroke.code == bind.origin && bind.keymap > 0) {
-                  if(keystroke.state == INTERCEPTION_KEY_UP) curMap = 0;
-                  else curMap = bind.keymap-1;
-
-                  if(keystroke.state == INTERCEPTION_KEY_UP) {
+                  if(!keyDown) {
+                    curMap = 0;
                     keyHeld[a] = false;
                     keyInMap[a] = curMap;
+                  } else {
+                    curMap = bind.keymap-1;
+                    keyHeld[a] = true;
                   }
-                  else if(keystroke.state == INTERCEPTION_KEY_DOWN) keyHeld[a] = true;
 
                   for(int b = 0;b < maxKeyTypes;b++) {
                     Binding testBind = keymaps[curMap].bindings[b];
