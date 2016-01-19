@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#define _WIN32_WINNT 0x0500
 #include <windows.h>
 #include <mmsystem.h>
 #include <sstream>
@@ -355,6 +356,8 @@ class KeyObj {
 
 int main(int argc, char *argv[])
 {
+    ShowWindow(GetConsoleWindow(), SW_MINIMIZE);
+
     ifstream profile_file;
     string line;
     string profile_json;
