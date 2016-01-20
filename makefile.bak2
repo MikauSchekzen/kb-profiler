@@ -1,0 +1,9 @@
+CC="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\cl.exe"
+# CFLAGS=-I.
+# DEPS = interception.h
+
+profiler:
+	$(CC) .\profiler.cpp .\src\utils.c .\src\binding.cpp .\src\keymap.cpp /I "C:\Program Files (x86)\Windows Kits\8.1\Include\um" /I ".\x86" /I ".\rapidjson" /link ".\x86\interception.lib" ".\x86\winmm.lib" /OUT:"Profiler_Test.exe"
+
+# profiler.o: profiler.cpp interception.h
+# 	$(CC) -c -o profiler.o profiler.cpp -L ./x64 -l interception

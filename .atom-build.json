@@ -1,6 +1,22 @@
 {
-  "cmd": "C:/Program Files (x86)/CodeBlocks/MinGW/bin/mingw32-make.exe",
+  "cmd": "mingw32-make.exe",
   "name": "Build",
   "cwd": "{PROJECT_PATH}",
-  "sh": false
+  "sh": false,
+  "targets": {
+    "alt": {
+      "name": "Alt Build",
+      "cmd": "D:/CLI/mingw/bin/mingw32-gcc-4.8.1.exe",
+      "cwd": "{PROJECT_PATH}",
+      "args": ["-L.\\x86", "-L.\\rapidjson", "-LD:.\\x86", "-o", "Profiler_Test.exe", "profiler.cpp", "src\\utils.c", "x86\\interception.lib", "rapidjson\\rapidjson.h", "x86\\winmm.lib", "src\\binding.cpp", "src\\keymap.cpp", "-std=c++11"],
+      "sh": false
+    },
+    "alt2": {
+      "name": "Meow",
+      "cmd": "mingw32-g++.exe",
+      "cwd": "{PROJECT_PATH}",
+      "args": ["profiler.cpp", "-o", "D:\\Meow.exe"],
+      "sh": false
+    }
+  }
 }

@@ -1,9 +1,9 @@
-CC=mingw32-g++
+CC=mingw32-g++.exe
 # CFLAGS=-I.
 # DEPS = interception.h
 
 profiler:
-	$(CC) -L.\x86 -L.\rapidjson -LD:.\x86 -o Profiler_Test.exe profiler.cpp utils.c x86\interception.lib rapidjson\rapidjson.h x86\winmm.lib
+	$(CC) -L.\x86 -L.\rapidjson -LD:.\x86 -o Profiler_Test.exe profiler.cpp src\utils.c x86\interception.lib rapidjson\rapidjson.h x86\winmm.lib src\binding.cpp src\keymap.cpp -std=c++11
 
 # profiler.o: profiler.cpp interception.h
 # 	$(CC) -c -o profiler.o profiler.cpp -L ./x64 -l interception

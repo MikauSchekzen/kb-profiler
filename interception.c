@@ -54,7 +54,7 @@ InterceptionContext interception_create_context(void)
     {
         HANDLE zero_padded_handle[2] = {0};
 
-        sprintf(&device_name[sizeof(device_name) - 3], "%02d", i);
+        sprintf_s(&device_name[sizeof(device_name) - 3], "%02d", i);
 
         device_array[i].handle = CreateFile(device_name, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
 
