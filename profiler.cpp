@@ -31,10 +31,12 @@ public:
   int keyRapidfire[maxKeyTypes];
   int keyOptions;
   int curMap;
+  bool useWhitelist;
 
   KeyOptions(int keyCount) {
     keyOptions = keyCount;
     curMap = 0;
+    useWhitelist = false;
 
     for(int a = 0;a < keyOptions;a++) {
       keyHeld[a] = false;
@@ -87,17 +89,24 @@ void handleInterception(InterceptionContext *context, InterceptionDevice *device
         bool sendOld = true;
 
         size_t length = interception_get_hardware_id(*context, *device, hardware_id, sizeof(hardware_id));
+        if(length > 0 && length < sizeof(hardware_id))
+            // wcout << hardware_id << endl;
 
         if(interception_is_keyboard(*device))
         {
           InterceptionKeyStroke &keystroke = *(InterceptionKeyStroke *) &stroke;
 
             bool doAction = false;
-            for(int hwid = 0;hwid < 10 && !doAction;hwid++) {
-              wstring hwid2(hardware_id);
-              if(whitelist[hwid] == string(hwid2.begin(), hwid2.end())) {
-                doAction = true;
+            if((*keyOpts).useWhitelist) {
+              for(int hwid = 0;hwid < 10 && !doAction;hwid++) {
+                wstring hwid2(hardware_id);
+                if(whitelist[hwid] == string(hwid2.begin(), hwid2.end())) {
+                  doAction = true;
+                }
               }
+            }
+            else {
+              doAction = true;
             }
             sendOld = false;
 
@@ -143,9 +152,7 @@ void handleInterception(InterceptionContext *context, InterceptionDevice *device
                   keystroke.code = bind.code;
                   if(bind.originE0 && !bind.codeE0) keystroke.state -= INTERCEPTION_KEY_E0;
                   else if(!bind.originE0 && bind.codeE0) keystroke.state += INTERCEPTION_KEY_E0;
-                  // if((*keyOpts).keyRapidfire[a] == 0 && keyDown) {
-                    interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
-                  // }
+                  interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
                   actionTaken = true;
                   if(keyDown && bind.rapidfire > 10 && (*keyOpts).keyRapidfire[a] == 0) {
                     (*keyOpts).keyRapidfire[a] = bind.rapidfire;
@@ -234,6 +241,9 @@ int main(int argc, char *argv[])
     }
     else cout << "Profile not found.";
 
+    // Create key options
+    KeyOptions keyOpts(maxMaps);
+
     // Load whitelist
     ifstream file;
     string whitelist[10];
@@ -244,9 +254,13 @@ int main(int argc, char *argv[])
         whitelist[a] = line;
         a++;
       }
-      profile_file.close();
+      file.close();
+      keyOpts.useWhitelist = true;
     }
-    else cout << "Unable to open whitelist.txt\nPressing on...\n";
+    else {
+      cout << "Unable to open whitelist.txt\nPressing on...\n";
+      keyOpts.useWhitelist = false;
+    }
 
 	  const int profileJSONLen = profile_json.length();
     char json[profileJSONLen];
@@ -290,7 +304,6 @@ int main(int argc, char *argv[])
     InterceptionContext context;
     InterceptionDevice device;
     InterceptionStroke stroke;
-    KeyOptions keyOpts(maxMaps);
 
     raise_process_priority();
 
