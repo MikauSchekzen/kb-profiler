@@ -5,10 +5,10 @@
   "sh": false,
   "targets": {
     "alt": {
-      "name": "Alt Build",
-      "cmd": "D:/CLI/mingw/bin/mingw32-gcc-4.8.1.exe",
+      "name": "Build Detector",
+      "cmd": "mingw32-g++.exe",
       "cwd": "{PROJECT_PATH}",
-      "args": ["-L.\\x86", "-L.\\rapidjson", "-LD:.\\x86", "-o", "Profiler_Test.exe", "profiler.cpp", "src\\utils.c", "x86\\interception.lib", "rapidjson\\rapidjson.h", "x86\\winmm.lib", "src\\binding.cpp", "src\\keymap.cpp", "-std=c++11"],
+      "args": ["-L.\\x86", "-L.\\src", "-o", "HWID_Detector.exe", "detector.cpp", "src\\utils.c", "x86\\interception.lib"],
       "sh": false
     },
     "alt2": {

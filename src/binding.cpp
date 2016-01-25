@@ -172,7 +172,7 @@ short Binding::parseKey(string key) {
 }
 
 bool Binding::isE0(string key) {
-	const int testNum = 13;
+	const int testNum = 12;
   string test[testNum];
   test[0] = "numpadenter";
   test[1] = "numpadsub";
@@ -186,7 +186,6 @@ bool Binding::isE0(string key) {
   test[9] = "right";
   test[10] = "up";
   test[11] = "down";
-  test[12] = "vkbf";
   for(int a = 0;a < testNum;a++) {
     if(key == test[a]) return true;
   }

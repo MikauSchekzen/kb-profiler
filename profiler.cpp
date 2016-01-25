@@ -252,6 +252,7 @@ int main(int argc, char *argv[])
       int a = 0;
       while(getline(file, line)) {
         whitelist[a] = line;
+        cout << "White-listing device " << line << "\n";
         a++;
       }
       file.close();
