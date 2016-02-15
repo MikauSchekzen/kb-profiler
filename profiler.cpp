@@ -23,12 +23,26 @@
 using namespace rapidjson;
 using namespace std;
 
+volatile bool termination = false;
+
+
+BOOL WINAPI ConsoleHandlerRoutine(DWORD dwCtrlType) {
+  if(dwCtrlType == CTRL_CLOSE_EVENT) {
+    termination = true;
+    Sleep(250);
+    return true;
+  }
+  return false;
+}
 
 class KeyOptions {
 public:
   bool keyHeld[maxKeyTypes];
   int keyInMap[maxKeyTypes];
   int keyRapidfire[maxKeyTypes];
+  bool keyToggled[maxKeyTypes];
+  bool keyToggledUp[maxKeyTypes];
+  bool keyPressed[maxKeyTypes];
   int keyOptions;
   int curMap;
   bool useWhitelist;
@@ -42,6 +56,9 @@ public:
       keyHeld[a] = false;
       keyInMap[a] = 0;
       keyRapidfire[a] = 0;
+      keyToggled[a] = false;
+      keyToggledUp[a] = false;
+      keyPressed[a] = false;
     }
   }
 };
@@ -75,12 +92,19 @@ void rapidfireFunc(InterceptionContext *context, InterceptionDevice *device, Key
   }
 }
 
+void processingFunc(InterceptionContext *context) {
+  while(!termination) {
+    Sleep(0);
+  }
+
+  cout << "Ending\n";
+  interception_destroy_context(*context);
+}
+
 void handleInterception(InterceptionContext *context, InterceptionDevice *device, InterceptionStroke& stroke, KeyOptions *keyOpts, Keymap *keymaps, string *whitelist) {
     wchar_t hardware_id[500];
 
     bool profileDisabled = false;
-
-    *context = interception_create_context();
 
     interception_set_filter(*context, interception_is_keyboard, INTERCEPTION_FILTER_KEY_DOWN | INTERCEPTION_FILTER_KEY_UP | INTERCEPTION_FILTER_KEY_E0);
 
@@ -152,8 +176,34 @@ void handleInterception(InterceptionContext *context, InterceptionDevice *device
                   keystroke.code = bind.code;
                   if(bind.originE0 && !bind.codeE0) keystroke.state -= INTERCEPTION_KEY_E0;
                   else if(!bind.originE0 && bind.codeE0) keystroke.state += INTERCEPTION_KEY_E0;
-                  interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
-                  actionTaken = true;
+                  // Toggle handling
+                  if(bind.toggle && !keyDown) {
+                    (*keyOpts).keyToggledUp[a] = true;
+                  }
+                  // Send keystroke
+                  if(!bind.toggle || (keyDown && !(*keyOpts).keyPressed[a])) {
+                    // Toggle handling
+                    bool changeStateFromToggle = false;
+                    if(bind.toggle && keyDown) {
+                      (*keyOpts).keyToggledUp[a] = false;
+                      (*keyOpts).keyToggled[a] = !(*keyOpts).keyToggled[a];
+                      if(!(*keyOpts).keyToggled[a]) {
+                        keystroke.state -= INTERCEPTION_KEY_DOWN;
+                        keystroke.state += INTERCEPTION_KEY_UP;
+                        changeStateFromToggle = true;
+                      }
+                      cout << (*keyOpts).keyToggled[a] << "\n";
+                    }
+                    // Send keystroke
+                    interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
+                    // Further toggle handling
+                    if(changeStateFromToggle) {
+                      keystroke.state -= INTERCEPTION_KEY_UP;
+                      keystroke.state += INTERCEPTION_KEY_DOWN;
+                    }
+                    actionTaken = true;
+                  }
+                  // Rapidfire handling
                   if(keyDown && bind.rapidfire > 10 && (*keyOpts).keyRapidfire[a] == 0) {
                     (*keyOpts).keyRapidfire[a] = bind.rapidfire;
                   }
@@ -183,6 +233,8 @@ void handleInterception(InterceptionContext *context, InterceptionDevice *device
                     if(bind.originE0) keystroke.state += INTERCEPTION_KEY_E0;
                   }
 
+                  if(keyDown && !(*keyOpts).keyPressed[a]) (*keyOpts).keyPressed[a] = true;
+                  else if(!keyDown && (*keyOpts).keyPressed[a]) (*keyOpts).keyPressed[a] = false;
                 }
                 else if(keystroke.code == bind.origin && bind.keymap > 0) {
                   if(!keyDown) {
@@ -305,13 +357,21 @@ int main(int argc, char *argv[])
     InterceptionContext context;
     InterceptionDevice device;
     InterceptionStroke stroke;
+    context = interception_create_context();
 
     raise_process_priority();
 
+    BOOL consoleHandler = SetConsoleCtrlHandler(ConsoleHandlerRoutine, true);
+
     thread rapidfireThread(rapidfireFunc, &context, &device, &keyOpts, keymaps);
     // rapidfireThread.join();
+    thread processingThread(processingFunc, &context);
 
+    // thread interceptionThread(handleInterception, &context, &device, stroke, &keyOpts, keymaps, whitelist);
     handleInterception(&context, &device, stroke, &keyOpts, keymaps, whitelist);
+    // while(!termination) {
+    //   Sleep(0);
+    // }
 
     return 0;
 }

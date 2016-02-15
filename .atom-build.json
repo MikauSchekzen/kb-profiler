@@ -12,10 +12,17 @@
       "sh": false
     },
     "alt2": {
-      "name": "Meow",
+      "name": "Caps F13",
       "cmd": "mingw32-g++.exe",
       "cwd": "{PROJECT_PATH}",
-      "args": ["profiler.cpp", "-o", "D:\\Meow.exe"],
+      "args": ["-L.\\x86", "-L.\\src", "-o", "CapsF13.exe", "capsf13.cpp", "src\\utils.c", "x86\\interception.lib"],
+      "sh": false
+    },
+    "profiler": {
+      "name": "Profiler",
+      "cmd": "mingw32-g++.exe",
+      "args": ["-o", "Profiler.exe", "profiler.c"],
+      "cwd": "{PROJECT_PATH}",
       "sh": false
     }
   }

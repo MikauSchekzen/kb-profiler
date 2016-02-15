@@ -16,9 +16,12 @@ public:
   bool ctrl;
   bool codeE0;
   bool originE0;
+  bool code2A;
+  bool origin2A;
   short code;
   short origin;
   int rapidfire;
+  bool toggle;
   int keymap;
   int index;
 
@@ -29,4 +32,5 @@ public:
   int parseKeymap(string key);
   short parseKey(string key);
   bool isE0(string key);
+  bool is2A(string key);
 };

@@ -15,6 +15,7 @@ Binding::Binding () {
   index = 0;
   codeE0 = false;
   originE0 = false;
+  toggle = false;
 }
 
 void Binding::parseBind(const Value& bind) {
@@ -27,6 +28,17 @@ void Binding::parseBind(const Value& bind) {
 
   if(bind["rapidfire"].IsString() && bind["rapidfire"].GetString() != "0") rapidfire = atoi(bind["rapidfire"].GetString());
   else if(bind["rapidfire"].IsNumber() && bind["rapidfire"].GetInt() > 0) rapidfire = bind["rapidfire"].GetInt();
+
+  if(bind.HasMember("toggle")) {
+    if(bind["toggle"].IsString()) {
+      string tog = bind["toggle"].GetString();
+      if(tog == "1") toggle = true;
+    }
+    else if(bind["toggle"].IsNumber()) {
+      int tog = bind["toggle"].GetInt();
+      if(tog == 1) toggle = true;
+    }
+  }
 
   if(bind["key"].IsString()) {
     code = stringToKeycode(bind["key"].GetString());
@@ -127,6 +139,19 @@ short Binding::parseKey(string key) {
   if(key == "f10") return SCANCODE_F10;
   if(key == "f11") return SCANCODE_F11;
   if(key == "f12") return SCANCODE_F12;
+
+  if(key == "f13") return SCANCODE_F13;
+  if(key == "f14") return SCANCODE_F14;
+  if(key == "f15") return SCANCODE_F15;
+  if(key == "f16") return SCANCODE_F16;
+  if(key == "f17") return SCANCODE_F17;
+  if(key == "f18") return SCANCODE_F18;
+  if(key == "f19") return SCANCODE_F19;
+  if(key == "f20") return SCANCODE_F20;
+  if(key == "f21") return SCANCODE_F21;
+  if(key == "f22") return SCANCODE_F22;
+  if(key == "f23") return SCANCODE_F23;
+  if(key == "f24") return SCANCODE_F24;
 
   if(key == "numpad1") return SCANCODE_KP1;
   if(key == "numpad2") return SCANCODE_KP2;
