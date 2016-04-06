@@ -1,5 +1,7 @@
 enum ScanCode
 {
+  SCANCODE_NONE        = 0x00,
+
   SCANCODE_APOSTROPHE  = 0x29,
   SCANCODE_1           = 0x02,
   SCANCODE_2           = 0x03,

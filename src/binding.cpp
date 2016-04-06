@@ -16,6 +16,7 @@ Binding::Binding () {
   codeE0 = false;
   originE0 = false;
   toggle = false;
+  hardware_id = "";
 }
 
 void Binding::parseBind(const Value& bind) {
@@ -38,6 +39,10 @@ void Binding::parseBind(const Value& bind) {
       int tog = bind["toggle"].GetInt();
       if(tog == 1) toggle = true;
     }
+  }
+
+  if(bind.HasMember("hardware_id") && bind["hardware_id"].IsString()) {
+    hardware_id = bind["hardware_id"].GetString();
   }
 
   if(bind["key"].IsString()) {
@@ -215,4 +220,8 @@ bool Binding::isE0(string key) {
     if(key == test[a]) return true;
   }
   return false;
+}
+
+bool Binding::isValidHwid(string hwid) {
+  return (hardware_id == "" || hardware_id == "any" || hardware_id == hwid);
 }

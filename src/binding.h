@@ -24,6 +24,7 @@ public:
   bool toggle;
   int keymap;
   int index;
+  string hardware_id;
 
   Binding();
   void parseBind(const Value& bind);
@@ -33,4 +34,5 @@ public:
   short parseKey(string key);
   bool isE0(string key);
   bool is2A(string key);
+  bool isValidHwid(string hwid);
 };

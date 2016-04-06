@@ -113,8 +113,8 @@ void handleInterception(InterceptionContext *context, InterceptionDevice *device
         bool sendOld = true;
 
         size_t length = interception_get_hardware_id(*context, *device, hardware_id, sizeof(hardware_id));
-        if(length > 0 && length < sizeof(hardware_id))
-            // wcout << hardware_id << endl;
+        wstring hwid2(hardware_id);
+        string hardwareID = string(hwid2.begin(), hwid2.end());
 
         if(interception_is_keyboard(*device))
         {
@@ -123,8 +123,7 @@ void handleInterception(InterceptionContext *context, InterceptionDevice *device
             bool doAction = false;
             if((*keyOpts).useWhitelist) {
               for(int hwid = 0;hwid < 10 && !doAction;hwid++) {
-                wstring hwid2(hardware_id);
-                if(whitelist[hwid] == string(hwid2.begin(), hwid2.end())) {
+                if(whitelist[hwid] == hardwareID) {
                   doAction = true;
                 }
               }
@@ -154,105 +153,107 @@ void handleInterception(InterceptionContext *context, InterceptionDevice *device
                 int m = (*keyOpts).keyInMap[a];
                 Binding bind = keymaps[m].bindings[a];
 
-                if(keystroke.code == bind.origin && bind.code != 0x00) {
-                  if(keyDown) {
-                    (*keyOpts).keyHeld[a] = true;
-                    if(bind.originE0) keystroke.state -= INTERCEPTION_KEY_E0;
-                    if(bind.shift) {
-                      keystroke.code = SCANCODE_LSHIFT;
-                      interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
-                    }
-                    if(bind.ctrl) {
-                      keystroke.code = SCANCODE_LCTRL;
-                      interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
-                    }
-                    if(bind.alt) {
-                      keystroke.code = SCANCODE_LALT;
-                      interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
-                    }
-                    if(bind.originE0) keystroke.state += INTERCEPTION_KEY_E0;
-                  }
-
-                  keystroke.code = bind.code;
-                  if(bind.originE0 && !bind.codeE0) keystroke.state -= INTERCEPTION_KEY_E0;
-                  else if(!bind.originE0 && bind.codeE0) keystroke.state += INTERCEPTION_KEY_E0;
-                  // Toggle handling
-                  if(bind.toggle && !keyDown) {
-                    (*keyOpts).keyToggledUp[a] = true;
-                  }
-                  // Send keystroke
-                  if(!bind.toggle || (keyDown && !(*keyOpts).keyPressed[a])) {
-                    // Toggle handling
-                    bool changeStateFromToggle = false;
-                    if(bind.toggle && keyDown) {
-                      (*keyOpts).keyToggledUp[a] = false;
-                      (*keyOpts).keyToggled[a] = !(*keyOpts).keyToggled[a];
-                      if(!(*keyOpts).keyToggled[a]) {
-                        keystroke.state -= INTERCEPTION_KEY_DOWN;
-                        keystroke.state += INTERCEPTION_KEY_UP;
-                        changeStateFromToggle = true;
+                if(bind.isValidHwid(hardwareID)) {
+                  if(keystroke.code == bind.origin && bind.code != 0x00) {
+                    if(keyDown) {
+                      (*keyOpts).keyHeld[a] = true;
+                      if(bind.originE0) keystroke.state -= INTERCEPTION_KEY_E0;
+                      if(bind.shift) {
+                        keystroke.code = SCANCODE_LSHIFT;
+                        interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
                       }
-                      cout << (*keyOpts).keyToggled[a] << "\n";
+                      if(bind.ctrl) {
+                        keystroke.code = SCANCODE_LCTRL;
+                        interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
+                      }
+                      if(bind.alt) {
+                        keystroke.code = SCANCODE_LALT;
+                        interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
+                      }
+                      if(bind.originE0) keystroke.state += INTERCEPTION_KEY_E0;
+                    }
+
+                    keystroke.code = bind.code;
+                    if(bind.originE0 && !bind.codeE0) keystroke.state -= INTERCEPTION_KEY_E0;
+                    else if(!bind.originE0 && bind.codeE0) keystroke.state += INTERCEPTION_KEY_E0;
+                    // Toggle handling
+                    if(bind.toggle && !keyDown) {
+                      (*keyOpts).keyToggledUp[a] = true;
                     }
                     // Send keystroke
-                    interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
-                    // Further toggle handling
-                    if(changeStateFromToggle) {
-                      keystroke.state -= INTERCEPTION_KEY_UP;
-                      keystroke.state += INTERCEPTION_KEY_DOWN;
+                    if(!bind.toggle || (keyDown && !(*keyOpts).keyPressed[a])) {
+                      // Toggle handling
+                      bool changeStateFromToggle = false;
+                      if(bind.toggle && keyDown) {
+                        (*keyOpts).keyToggledUp[a] = false;
+                        (*keyOpts).keyToggled[a] = !(*keyOpts).keyToggled[a];
+                        if(!(*keyOpts).keyToggled[a]) {
+                          keystroke.state -= INTERCEPTION_KEY_DOWN;
+                          keystroke.state += INTERCEPTION_KEY_UP;
+                          changeStateFromToggle = true;
+                        }
+                        cout << (*keyOpts).keyToggled[a] << "\n";
+                      }
+                      // Send keystroke
+                      interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
+                      // Further toggle handling
+                      if(changeStateFromToggle) {
+                        keystroke.state -= INTERCEPTION_KEY_UP;
+                        keystroke.state += INTERCEPTION_KEY_DOWN;
+                      }
+                      actionTaken = true;
+                    }
+                    // Rapidfire handling
+                    if(keyDown && bind.rapidfire > 10 && (*keyOpts).keyRapidfire[a] == 0) {
+                      (*keyOpts).keyRapidfire[a] = bind.rapidfire;
+                    }
+                    if(!keyDown) {
+                      (*keyOpts).keyRapidfire[a] = 0;
+                    }
+
+                    if(!keyDown) {
+                      (*keyOpts).keyHeld[a] = false;
+                      if(bind.originE0) keystroke.state -= INTERCEPTION_KEY_E0;
+                      Binding testBind = keymaps[(*keyOpts).curMap].bindings[a];
+                      if(testBind.code != 0x00 || (*keyOpts).curMap == 0) {
+                        (*keyOpts).keyInMap[a] = (*keyOpts).curMap;
+                      }
+                      if(bind.shift) {
+                        keystroke.code = SCANCODE_LSHIFT;
+                        interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
+                      }
+                      if(bind.ctrl) {
+                        keystroke.code = SCANCODE_LCTRL;
+                        interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
+                      }
+                      if(bind.alt) {
+                        keystroke.code = SCANCODE_LALT;
+                        interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
+                      }
+                      if(bind.originE0) keystroke.state += INTERCEPTION_KEY_E0;
+                    }
+
+                    if(keyDown && !(*keyOpts).keyPressed[a]) (*keyOpts).keyPressed[a] = true;
+                    else if(!keyDown && (*keyOpts).keyPressed[a]) (*keyOpts).keyPressed[a] = false;
+                  }
+                  else if(keystroke.code == bind.origin && bind.keymap > 0) {
+                    if(!keyDown) {
+                      (*keyOpts).curMap = 0;
+                      (*keyOpts).keyHeld[a] = false;
+                      (*keyOpts).keyInMap[a] = (*keyOpts).curMap;
+                    } else {
+                      (*keyOpts).curMap = bind.keymap-1;
+                      (*keyOpts).keyHeld[a] = true;
+                    }
+
+                    for(int b = 0;b < maxKeyTypes;b++) {
+                      Binding testBind = keymaps[(*keyOpts).curMap].bindings[b];
+                      if(!(*keyOpts).keyHeld[b] && (testBind.code != 0x00 || (*keyOpts).curMap == 0)) {
+                        (*keyOpts).keyInMap[b] = (*keyOpts).curMap;
+                      }
                     }
                     actionTaken = true;
                   }
-                  // Rapidfire handling
-                  if(keyDown && bind.rapidfire > 10 && (*keyOpts).keyRapidfire[a] == 0) {
-                    (*keyOpts).keyRapidfire[a] = bind.rapidfire;
-                  }
-                  if(!keyDown) {
-                    (*keyOpts).keyRapidfire[a] = 0;
-                  }
-
-                  if(!keyDown) {
-                    (*keyOpts).keyHeld[a] = false;
-                    if(bind.originE0) keystroke.state -= INTERCEPTION_KEY_E0;
-                    Binding testBind = keymaps[(*keyOpts).curMap].bindings[a];
-                    if(testBind.code != 0x00 || (*keyOpts).curMap == 0) {
-                      (*keyOpts).keyInMap[a] = (*keyOpts).curMap;
-                    }
-                    if(bind.shift) {
-                      keystroke.code = SCANCODE_LSHIFT;
-                      interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
-                    }
-                    if(bind.ctrl) {
-                      keystroke.code = SCANCODE_LCTRL;
-                      interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
-                    }
-                    if(bind.alt) {
-                      keystroke.code = SCANCODE_LALT;
-                      interception_send(*context, *device, (InterceptionStroke *)&keystroke, 1);
-                    }
-                    if(bind.originE0) keystroke.state += INTERCEPTION_KEY_E0;
-                  }
-
-                  if(keyDown && !(*keyOpts).keyPressed[a]) (*keyOpts).keyPressed[a] = true;
-                  else if(!keyDown && (*keyOpts).keyPressed[a]) (*keyOpts).keyPressed[a] = false;
-                }
-                else if(keystroke.code == bind.origin && bind.keymap > 0) {
-                  if(!keyDown) {
-                    (*keyOpts).curMap = 0;
-                    (*keyOpts).keyHeld[a] = false;
-                    (*keyOpts).keyInMap[a] = (*keyOpts).curMap;
-                  } else {
-                    (*keyOpts).curMap = bind.keymap-1;
-                    (*keyOpts).keyHeld[a] = true;
-                  }
-
-                  for(int b = 0;b < maxKeyTypes;b++) {
-                    Binding testBind = keymaps[(*keyOpts).curMap].bindings[b];
-                    if(!(*keyOpts).keyHeld[b] && (testBind.code != 0x00 || (*keyOpts).curMap == 0)) {
-                      (*keyOpts).keyInMap[b] = (*keyOpts).curMap;
-                    }
-                  }
-                  actionTaken = true;
                 }
               }
             }
